@@ -1,55 +1,111 @@
 package timnekk;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import timnekk.exceptions.CanNotGetDependenciesException;
+import timnekk.exceptions.CircularDependencyException;
+import timnekk.models.DependenciesFinder;
+import timnekk.models.FileDependenciesFinder;
+import timnekk.models.Graph;
 
-public class Application {
-    public static void main(String[] args) {
-        File root = new File("root");
-        FileWorker fileWorker = new FileWorker(root);
+import java.io.*;
+import java.util.*;
 
-        // Get all files in the root directory
-        Set<File> files = FileWorker.getFiles(root);
+public final class Application {
+    private final Scanner scanner;
+    private final PrintStream printStream;
 
-        // Create nodes
-        Set<Node<File>> nodes = new HashSet<>();
-        for (File file : files) {
-            Node<File> node = new Node<>(file);
-            nodes.add(node);
-        }
-
-        // Set dependencies
-        for (Node<File> node : nodes) {
-            Set<File> dependencies = fileWorker.getDependencies(node.getValue());
-
-            for (File dependency : dependencies) {
-                for (Node<File> dependencyNode : nodes) {
-                    if (dependencyNode.getValue().equals(dependency)) {
-                        node.addDependency(dependencyNode);
-                    }
-                }
-            }
-        }
-
-        // Print dependencies
-//        for (Node<File> node : nodes) {
-//            System.out.println(node.getValue().getName());
-//            for (Node<File> dependency : node.getDependencies()) {
-//                System.out.println("\t" + dependency.getValue().getName());
-//            }
-//        }
-
-        resolveDependencies(nodes, new HashSet<>());
+    public Application(InputStream inputStream, OutputStream outputStream) {
+        scanner = new Scanner(inputStream);
+        printStream = new PrintStream(outputStream);
     }
 
-    private static void resolveDependencies(Set<Node<File>> nodes, Set<Node<File>> resolved) {
-        for (Node<File> node : nodes) {
-            if (!resolved.contains(node)) {
-                resolveDependencies(node.getDependencies(), resolved);
-                resolved.add(node);
-                System.out.print(node.getValue().getName());
+    public void run() {
+        File root = getRootDirectory();
+        getGraphOfFiles(root).ifPresent(this::printGraphInfo);
+    }
+
+    private File getRootDirectory() {
+        printStream.println("Enter the path to the root directory: ");
+        String path = scanner.nextLine();
+        return new File(path);
+    }
+
+    /**
+     * Gets a graph of all files in the root directory and its subdirectories
+     *
+     * @param root Root directory
+     * @return Graph of all files
+     */
+    private Optional<Graph<File>> getGraphOfFiles(File root) {
+        Set<File> files = FileUtils.getFiles(root);
+        DependenciesFinder<File> dependenciesFinder = new FileDependenciesFinder(root);
+
+        try {
+            return Optional.of(new Graph<>(files, dependenciesFinder));
+        } catch (CanNotGetDependenciesException e) {
+            printStream.println(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private void printGraphInfo(Graph<File> graph) {
+        Optional<List<File>> sortedFiles = getSortedListOfFiles(graph);
+
+        if (sortedFiles.isEmpty()) {
+            return;
+        }
+
+        if (graph.hasMissingDependencies()) {
+            printStream.println("\nMissing dependencies: ");
+            printMissingDependencies(graph);
+        }
+
+        printStream.println("\nFiles merging order:");
+        printFilesMergingOrder(sortedFiles.get());
+
+        printStream.println("\nMerged content:");
+        printMergedContent(sortedFiles.get());
+    }
+
+    private Optional<List<File>> getSortedListOfFiles(Graph<File> graph) {
+        try {
+            return Optional.of(graph.getSortedListOfItems());
+        } catch (CircularDependencyException e) {
+            printStream.println(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private void printFilesMergingOrder(Collection<File> files) {
+        int i = 1;
+        for (File file : files) {
+            printStream.println(i + ". " + file.getName());
+            i++;
+        }
+    }
+
+    private void printMergedContent(Collection<File> files) {
+        Set<File> notReadFiles = new HashSet<>();
+        for (File file : files) {
+            try {
+                FileUtils.printFile(file, printStream);
+            } catch (FileNotFoundException e) {
+                notReadFiles.add(file);
             }
+        }
+
+        if (!notReadFiles.isEmpty()) {
+            printStream.println("\nThe following files could not be read:");
+            for (File file : notReadFiles) {
+                printStream.println(file);
+            }
+        }
+    }
+
+    private void printMissingDependencies(Graph<File> graph) {
+        int i = 1;
+        for (File file : graph.getMissingDependencies()) {
+            printStream.println(i + ". " + file);
+            i++;
         }
     }
 }
