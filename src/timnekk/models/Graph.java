@@ -1,6 +1,6 @@
 package timnekk.models;
 
-import timnekk.exceptions.CanNotGetDependenciesException;
+import timnekk.exceptions.DependenciesGettingException;
 import timnekk.exceptions.CircularDependencyException;
 
 import java.util.*;
@@ -10,7 +10,7 @@ public final class Graph<E> {
     private final Set<E> missingDependencies = new HashSet<>();
     private final DependenciesFinder<E> dependenciesFinder;
 
-    public Graph(Set<E> items, DependenciesFinder<E> dependenciesFinder) throws CanNotGetDependenciesException {
+    public Graph(Set<E> items, DependenciesFinder<E> dependenciesFinder) throws DependenciesGettingException {
         this.dependenciesFinder = dependenciesFinder;
 
         createNodes(items);
@@ -29,7 +29,7 @@ public final class Graph<E> {
         }
     }
 
-    private void addNodesDependencies() throws CanNotGetDependenciesException {
+    private void addNodesDependencies() throws DependenciesGettingException {
         for (Node<E> node : nodes) {
             Set<E> dependentItems = dependenciesFinder.findDependencies(node.getValue());
 
