@@ -1,8 +1,8 @@
 package timnekk;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import timnekk.exceptions.FileWritingException;
+
+import java.io.*;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Scanner;
@@ -30,16 +30,18 @@ public final class FileUtils {
         return files;
     }
 
-    /**
-     * Prints contents of a file
-     *
-     * @param file File to print
-     * @throws FileNotFoundException if the file can not be read
-     */
-    public static void printFile(File file, PrintStream printStream) throws FileNotFoundException {
+
+    public static void addFileContentToFile(File file, File fileToAdd)
+            throws FileNotFoundException, FileWritingException {
         Scanner scanner = new Scanner(file);
-        while (scanner.hasNextLine()) {
-            printStream.println(scanner.nextLine());
+
+        try (Writer writer = new FileWriter(fileToAdd, true)) {
+            while (scanner.hasNextLine()) {
+                writer.write(scanner.nextLine());
+                writer.write(System.lineSeparator());
+            }
+        } catch (IOException e) {
+            throw new FileWritingException("Could not write to file: " + fileToAdd.getAbsolutePath(), e);
         }
     }
 }

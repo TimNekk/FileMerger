@@ -1,6 +1,6 @@
 package timnekk.models;
 
-import timnekk.exceptions.CanNotGetDependenciesException;
+import timnekk.exceptions.DependenciesGettingException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,16 +23,16 @@ public final class FileDependenciesFinder implements DependenciesFinder<File> {
      *
      * @param file File to find dependencies of
      * @return Set of files that the file depends on
-     * @throws CanNotGetDependenciesException if the file can not be read
+     * @throws DependenciesGettingException if the file can not be read
      */
-    public Set<File> findDependencies(File file) throws CanNotGetDependenciesException {
+    public Set<File> findDependencies(File file) throws DependenciesGettingException {
         Set<File> dependencies = new HashSet<>();
 
         Scanner scanner;
         try {
             scanner = new Scanner(file);
         } catch (FileNotFoundException e) {
-            throw new CanNotGetDependenciesException(
+            throw new DependenciesGettingException(
                     "Can not read file to find dependencies: " + file.getAbsolutePath(), e);
         }
 
