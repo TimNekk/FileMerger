@@ -10,15 +10,27 @@ import timnekk.models.Graph;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Main class of the application.
+ */
 public final class Application {
     private final Scanner scanner;
     private final PrintStream printStream;
 
+    /**
+     * Creates an instance of the application.
+     *
+     * @param inputStream  Input stream to read from
+     * @param outputStream Output stream to write to
+     */
     public Application(InputStream inputStream, OutputStream outputStream) {
         scanner = new Scanner(inputStream);
         printStream = new PrintStream(outputStream);
     }
 
+    /**
+     * Runs the application.
+     */
     public void run() {
         File root = getFileFromUser("Enter root directory: ");
         File output = getFileFromUser("Enter output file: ");
@@ -45,6 +57,12 @@ public final class Application {
         printStream.println("\nFiles merged successfully to " + output.getAbsolutePath());
     }
 
+    /**
+     * Gets a file from the user.
+     *
+     * @param promptMessage Message to show to the user
+     * @return File from the user
+     */
     private File getFileFromUser(String promptMessage) {
         printStream.println(promptMessage);
         String path = scanner.nextLine();
@@ -69,6 +87,12 @@ public final class Application {
         }
     }
 
+    /**
+     * Gets a sorted list of files in the graph
+     *
+     * @param graph Graph of files
+     * @return Sorted list of files
+     */
     private Optional<List<File>> getSortedListOfFiles(Graph<File> graph) {
         try {
             return Optional.of(graph.getSortedListOfItems());
@@ -78,6 +102,11 @@ public final class Application {
         }
     }
 
+    /**
+     * Prints the order in which the files should be merged
+     *
+     * @param files List of files
+     */
     private void printFilesMergingOrder(Collection<File> files) {
         int i = 1;
         for (File file : files) {
@@ -86,6 +115,12 @@ public final class Application {
         }
     }
 
+    /**
+     * Merges the content of the files into the output file
+     *
+     * @param files      List of files
+     * @param outputFile Output file
+     */
     private void mergeContent(Collection<File> files, File outputFile) {
         Set<File> notReadFiles = new HashSet<>();
         for (File file : files) {
@@ -107,6 +142,11 @@ public final class Application {
         }
     }
 
+    /**
+     * Prints the missing dependencies of the graph
+     *
+     * @param graph Graph of files
+     */
     private void printMissingDependencies(Graph<File> graph) {
         int i = 1;
         for (File file : graph.getMissingDependencies()) {

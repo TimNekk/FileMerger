@@ -11,9 +11,17 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Finds dependencies in a file
+ */
 public final class FileDependenciesFinder implements DependenciesFinder<File> {
     private final File root;
 
+    /**
+     * Creates an instance of the class
+     *
+     * @param projectRoot Root directory of the project
+     */
     public FileDependenciesFinder(File projectRoot) {
         this.root = projectRoot;
     }
