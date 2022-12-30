@@ -1,7 +1,8 @@
 package timnekk;
 
-import timnekk.exceptions.CanNotGetDependenciesException;
+import timnekk.exceptions.DependenciesGettingException;
 import timnekk.exceptions.CircularDependencyException;
+import timnekk.exceptions.FileWritingException;
 import timnekk.models.DependenciesFinder;
 import timnekk.models.FileDependenciesFinder;
 import timnekk.models.Graph;
@@ -19,12 +20,33 @@ public final class Application {
     }
 
     public void run() {
-        File root = getRootDirectory();
-        getGraphOfFiles(root).ifPresent(this::printGraphInfo);
+        File root = getFileFromUser("Enter root directory: ");
+        File output = getFileFromUser("Enter output file: ");
+
+        Optional<Graph<File>> graph = getGraphOfFiles(root);
+        if (graph.isEmpty()) {
+            return;
+        }
+
+        Optional<List<File>> sortedFiles = getSortedListOfFiles(graph.get());
+        if (sortedFiles.isEmpty()) {
+            return;
+        }
+
+        if (graph.get().hasMissingDependencies()) {
+            printStream.println("\nMissing dependencies: ");
+            printMissingDependencies(graph.get());
+        }
+
+        printStream.println("\nFiles merging order:");
+        printFilesMergingOrder(sortedFiles.get());
+
+        mergeContent(sortedFiles.get(), output);
+        printStream.println("\nFiles merged successfully to " + output.getAbsolutePath());
     }
 
-    private File getRootDirectory() {
-        printStream.println("Enter the path to the root directory: ");
+    private File getFileFromUser(String promptMessage) {
+        printStream.println(promptMessage);
         String path = scanner.nextLine();
         return new File(path);
     }
@@ -41,29 +63,10 @@ public final class Application {
 
         try {
             return Optional.of(new Graph<>(files, dependenciesFinder));
-        } catch (CanNotGetDependenciesException e) {
+        } catch (DependenciesGettingException e) {
             printStream.println(e.getMessage());
             return Optional.empty();
         }
-    }
-
-    private void printGraphInfo(Graph<File> graph) {
-        Optional<List<File>> sortedFiles = getSortedListOfFiles(graph);
-
-        if (sortedFiles.isEmpty()) {
-            return;
-        }
-
-        if (graph.hasMissingDependencies()) {
-            printStream.println("\nMissing dependencies: ");
-            printMissingDependencies(graph);
-        }
-
-        printStream.println("\nFiles merging order:");
-        printFilesMergingOrder(sortedFiles.get());
-
-        printStream.println("\nMerged content:");
-        printMergedContent(sortedFiles.get());
     }
 
     private Optional<List<File>> getSortedListOfFiles(Graph<File> graph) {
@@ -83,13 +86,16 @@ public final class Application {
         }
     }
 
-    private void printMergedContent(Collection<File> files) {
+    private void mergeContent(Collection<File> files, File outputFile) {
         Set<File> notReadFiles = new HashSet<>();
         for (File file : files) {
             try {
-                FileUtils.printFile(file, printStream);
+                FileUtils.addFileContentToFile(file, outputFile);
             } catch (FileNotFoundException e) {
                 notReadFiles.add(file);
+            } catch (FileWritingException e) {
+                printStream.println(e.getMessage());
+                return;
             }
         }
 
