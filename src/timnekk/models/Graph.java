@@ -1,22 +1,27 @@
-package timnekk;
+package timnekk.models;
 
-import timnekk.models.Node;
+import timnekk.exceptions.CanNotGetDependenciesException;
+import timnekk.exceptions.CircularDependencyException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class Graph<E> {
     private final Set<Node<E>> nodes = new HashSet<>();
+    private final Set<E> missingDependencies = new HashSet<>();
     private final DependenciesFinder<E> dependenciesFinder;
 
-    public Graph(Set<E> items, DependenciesFinder<E> dependenciesFinder) {
+    public Graph(Set<E> items, DependenciesFinder<E> dependenciesFinder) throws CanNotGetDependenciesException {
         this.dependenciesFinder = dependenciesFinder;
+
         createNodes(items);
         addNodesDependencies();
     }
 
+    /**
+     * Creates nodes for all items without dependencies
+     *
+     * @param items Items to create nodes for
+     */
     private void createNodes(Set<E> items) {
         for (E item : items) {
             Node<E> node = new Node<>(item);
@@ -24,21 +29,32 @@ public final class Graph<E> {
         }
     }
 
-    private void addNodesDependencies() {
+    private void addNodesDependencies() throws CanNotGetDependenciesException {
         for (Node<E> node : nodes) {
             Set<E> dependentItems = dependenciesFinder.findDependencies(node.getValue());
 
             for (E dependentItem : dependentItems) {
-
-                for (Node<E> otherNode : nodes) {
-                    E otherNodeItem = otherNode.getValue();
-                    if (otherNodeItem.equals(dependentItem)) {
-                        node.addDependentNode(otherNode);
-                    }
-                }
-
+                getNode(dependentItem).ifPresentOrElse(
+                        node::addDependentNode,
+                        () -> missingDependencies.add(dependentItem)
+                );
             }
         }
+    }
+
+    /**
+     * Gets a node from the graph
+     *
+     * @param item Item to get node for
+     * @return Node for the item
+     */
+    private Optional<Node<E>> getNode(E item) {
+        for (Node<E> node : nodes) {
+            if (node.getValue().equals(item)) {
+                return Optional.of(node);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -75,5 +91,23 @@ public final class Graph<E> {
         }
 
         return items;
+    }
+
+    /**
+     * Gets missing dependencies
+     *
+     * @return Set of missing dependencies
+     */
+    public Set<E> getMissingDependencies() {
+        return missingDependencies;
+    }
+
+    /**
+     * Whether the graph has missing dependencies
+     *
+     * @return True if the graph has missing dependencies, false otherwise
+     */
+    public boolean hasMissingDependencies() {
+        return !missingDependencies.isEmpty();
     }
 }
