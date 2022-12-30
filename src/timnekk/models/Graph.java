@@ -5,11 +5,23 @@ import timnekk.exceptions.CircularDependencyException;
 
 import java.util.*;
 
+/**
+ * Graph class represents a graph of nodes with dependencies.
+ *
+ * @param <E> Type of the value of the nodes
+ */
 public final class Graph<E> {
     private final Set<Node<E>> nodes = new HashSet<>();
     private final Set<E> missingDependencies = new HashSet<>();
     private final DependenciesFinder<E> dependenciesFinder;
 
+    /**
+     * Creates a graph
+     *
+     * @param items              Items to create nodes for
+     * @param dependenciesFinder Dependencies finder for the items
+     * @throws DependenciesGettingException If dependencies can not be found
+     */
     public Graph(Set<E> items, DependenciesFinder<E> dependenciesFinder) throws DependenciesGettingException {
         this.dependenciesFinder = dependenciesFinder;
 
@@ -29,6 +41,11 @@ public final class Graph<E> {
         }
     }
 
+    /**
+     * Adds dependencies to the nodes
+     *
+     * @throws DependenciesGettingException If dependencies can not be found
+     */
     private void addNodesDependencies() throws DependenciesGettingException {
         for (Node<E> node : nodes) {
             Set<E> dependentItems = dependenciesFinder.findDependencies(node.getValue());
@@ -67,6 +84,15 @@ public final class Graph<E> {
         return getSortedListOfItems(nodes, new HashSet<>(), new HashSet<>());
     }
 
+    /**
+     * Gets list of items sorted by dependencies.
+     *
+     * @param nodes    Nodes to sort
+     * @param resolved Resolved nodes
+     * @param seen     Seen nodes
+     * @return List of items sorted by dependencies.
+     * @throws CircularDependencyException if circular dependency is found.
+     */
     private List<E> getSortedListOfItems(Set<Node<E>> nodes, Set<Node<E>> resolved, Set<Node<E>> seen)
             throws CircularDependencyException {
         List<E> items = new ArrayList<>();

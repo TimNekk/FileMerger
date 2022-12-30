@@ -8,6 +8,9 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 
+/**
+ * A class that contains methods for working with files.
+ */
 public final class FileUtils {
     /**
      * Gets all files in the root directory and its subdirectories
@@ -30,7 +33,14 @@ public final class FileUtils {
         return files;
     }
 
-
+    /**
+     * Reads a file and writes its content to another file (appends)
+     *
+     * @param file      File to read from
+     * @param fileToAdd File to write to
+     * @throws FileNotFoundException if the file can not be read
+     * @throws FileWritingException  if the file can not be written to
+     */
     public static void addFileContentToFile(File file, File fileToAdd)
             throws FileNotFoundException, FileWritingException {
         Scanner scanner = new Scanner(file);

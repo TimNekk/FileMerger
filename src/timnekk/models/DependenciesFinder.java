@@ -4,6 +4,11 @@ import timnekk.exceptions.DependenciesGettingException;
 
 import java.util.Set;
 
+/**
+ * This interface is used to find dependencies of a given item.
+ *
+ * @param <E> type of the item to find dependencies for.
+ */
 public interface DependenciesFinder<E> {
     /**
      * Finds all dependencies of an item
