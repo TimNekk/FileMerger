@@ -28,14 +28,14 @@ public final class FileUtils {
     public static Set<File> getFiles(File directory) {
         Set<File> files = new HashSet<>();
 
-        if (directory.isDirectory()) {
-            for (File file : Objects.requireNonNull(directory.listFiles())) {
-                files.addAll(getFiles(file));
-            }
-        } else {
+        if (directory.isFile()) {
             files.add(directory);
+            return files;
         }
 
+        for (File file : Objects.requireNonNull(directory.listFiles())) {
+            files.addAll(getFiles(file));
+        }
         return files;
     }
 

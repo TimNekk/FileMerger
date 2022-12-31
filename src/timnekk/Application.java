@@ -116,15 +116,17 @@ public final class Application implements AutoCloseable {
             i++;
 
             Optional<Node<File>> node = graph.getNode(file);
-            if (node.isPresent()) {
-                Set<Node<File>> dependentNodes = node.get().getDependentNodes();
+            if (node.isEmpty()) {
+                continue;
+            }
 
-                int j = 1;
-                for (Node<File> dependentNode : dependentNodes) {
-                    printStream.print((j == dependentNodes.size() ? "   └── " : "   ├── "));
-                    printStream.println(dependentNode.getValue().getName());
-                    j++;
-                }
+            Set<Node<File>> dependentNodes = node.get().getDependentNodes();
+            int j = 1;
+
+            for (Node<File> dependentNode : dependentNodes) {
+                printStream.print((j == dependentNodes.size() ? "   └── " : "   ├── "));
+                printStream.println(dependentNode.getValue().getName());
+                j++;
             }
         }
     }
@@ -148,11 +150,13 @@ public final class Application implements AutoCloseable {
             }
         }
 
-        if (!notReadFiles.isEmpty()) {
-            printStream.println("\nThe following files could not be read:");
-            for (File file : notReadFiles) {
-                printStream.println(file);
-            }
+        if (notReadFiles.isEmpty()) {
+            return;
+        }
+
+        printStream.println("\nThe following files could not be read:");
+        for (File file : notReadFiles) {
+            printStream.println(file);
         }
     }
 
