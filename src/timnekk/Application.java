@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * Main class of the application.
  */
-public final class Application {
+public final class Application implements AutoCloseable {
     private final Scanner scanner;
     private final PrintStream printStream;
 
@@ -167,5 +167,10 @@ public final class Application {
             printStream.println(i + ". " + file);
             i++;
         }
+    }
+
+    @Override
+    public void close() {
+        scanner.close();
     }
 }
