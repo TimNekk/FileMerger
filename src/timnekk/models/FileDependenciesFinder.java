@@ -36,19 +36,16 @@ public final class FileDependenciesFinder implements DependenciesFinder<File> {
     public Set<File> findDependencies(File file) throws DependenciesGettingException {
         Set<File> dependencies = new HashSet<>();
 
-        Scanner scanner;
-        try {
-            scanner = new Scanner(file);
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+
+                Optional<File> dependency = findDependentFile(line);
+                dependency.ifPresent(dependencies::add);
+            }
         } catch (FileNotFoundException e) {
             throw new DependenciesGettingException(
                     "Can not read file to find dependencies: " + file.getAbsolutePath(), e);
-        }
-
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-
-            Optional<File> dependency = findDependentFile(line);
-            dependency.ifPresent(dependencies::add);
         }
 
         return dependencies;
@@ -61,7 +58,7 @@ public final class FileDependenciesFinder implements DependenciesFinder<File> {
      * @return File if a dependency is found, null otherwise
      */
     private Optional<File> findDependentFile(String line) {
-        Pattern pattern = Pattern.compile("require ‘(.+)’");
+        Pattern pattern = Pattern.compile("require [‘'\"`](.+)[’'\"`]");
         Matcher matcher = pattern.matcher(line);
 
         if (matcher.find()) {

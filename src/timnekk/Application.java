@@ -6,6 +6,7 @@ import timnekk.exceptions.FileWritingException;
 import timnekk.models.DependenciesFinder;
 import timnekk.models.FileDependenciesFinder;
 import timnekk.models.Graph;
+import timnekk.models.Node;
 
 import java.io.*;
 import java.util.*;
@@ -13,7 +14,7 @@ import java.util.*;
 /**
  * Main class of the application.
  */
-public final class Application {
+public final class Application implements AutoCloseable {
     private final Scanner scanner;
     private final PrintStream printStream;
 
@@ -51,7 +52,7 @@ public final class Application {
         }
 
         printStream.println("\nFiles merging order:");
-        printFilesMergingOrder(sortedFiles.get());
+        printFilesMergingOrder(sortedFiles.get(), graph.get());
 
         mergeContent(sortedFiles.get(), output);
         printStream.println("\nFiles merged successfully to " + output.getAbsolutePath());
@@ -103,15 +104,28 @@ public final class Application {
     }
 
     /**
-     * Prints the order in which the files should be merged
+     * Prints the order in which the files should be merged and the dependencies of each file
      *
      * @param files List of files
+     * @param graph Graph of files
      */
-    private void printFilesMergingOrder(Collection<File> files) {
+    private void printFilesMergingOrder(Collection<File> files, Graph<File> graph) {
         int i = 1;
         for (File file : files) {
             printStream.println(i + ". " + file.getName());
             i++;
+
+            Optional<Node<File>> node = graph.getNode(file);
+            if (node.isPresent()) {
+                Set<Node<File>> dependentNodes = node.get().getDependentNodes();
+
+                int j = 1;
+                for (Node<File> dependentNode : dependentNodes) {
+                    printStream.print((j == dependentNodes.size() ? "   └── " : "   ├── "));
+                    printStream.println(dependentNode.getValue().getName());
+                    j++;
+                }
+            }
         }
     }
 
@@ -153,5 +167,10 @@ public final class Application {
             printStream.println(i + ". " + file);
             i++;
         }
+    }
+
+    @Override
+    public void close() {
+        scanner.close();
     }
 }

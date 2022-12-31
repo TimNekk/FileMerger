@@ -65,7 +65,7 @@ public final class Graph<E> {
      * @param item Item to get node for
      * @return Node for the item
      */
-    private Optional<Node<E>> getNode(E item) {
+    public Optional<Node<E>> getNode(E item) {
         for (Node<E> node : nodes) {
             if (node.getValue().equals(item)) {
                 return Optional.of(node);
