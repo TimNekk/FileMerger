@@ -13,6 +13,12 @@ import java.util.Set;
  */
 public final class FileUtils {
     /**
+     * Private constructor to prevent instantiation.
+     */
+    private FileUtils() {
+    }
+
+    /**
      * Gets all files in the root directory and its subdirectories
      * If the root directory is a file, it will return a set with only that file
      *
@@ -43,9 +49,10 @@ public final class FileUtils {
      */
     public static void addFileContentToFile(File file, File fileToAdd)
             throws FileNotFoundException, FileWritingException {
-        Scanner scanner = new Scanner(file);
-
-        try (Writer writer = new FileWriter(fileToAdd, true)) {
+        try (
+                Scanner scanner = new Scanner(file);
+                Writer writer = new FileWriter(fileToAdd, true)
+        ) {
             while (scanner.hasNextLine()) {
                 writer.write(scanner.nextLine());
                 writer.write(System.lineSeparator());
